@@ -17,7 +17,6 @@ lib
 *.DS_Store
 .idea
 .idea/*
-examples
 physio_out
 .gitignore
 
