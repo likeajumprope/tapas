@@ -31,10 +31,10 @@ end
 % results
 function test_readin_bids_ppu3t(testCase)
 
-% run BIDS PPU example and extract physio
+% Get PhysIO public repo base folder from this file's location
 pathPhysioPublic = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');
-% TODO: Make generic!
-pathExamples =  fullfile(pathPhysioPublic, '..', 'examples');
+pathExamples = tapas_physio_get_path_examples(pathPhysioPublic);
+
 
 % load SPM matlabbatch, but convert to pure script before executing
 % remove unnecessary (beyond read-in) part from job exeuction (e.g.
@@ -79,8 +79,7 @@ function test_readin_bids_cpulse3t(testCase)
 
 % run BIDS cpulse3t example and extract physio
 pathPhysioPublic = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');
-% TODO: Make generic!
-pathExamples =  fullfile(pathPhysioPublic, '..', 'examples');
+pathExamples = tapas_physio_get_path_examples(pathPhysioPublic);
 
 % load SPM matlabbatch, but convert to pure script before executing
 % remove unnecessary (beyond read-in) part from job exeuction (e.g.
@@ -122,3 +121,42 @@ verifyEqual(testCase, actRaw.cpulse, expRaw.cpulse, 'Raw cardiac trace does not 
 verifyEqual(testCase, actRaw.r, expRaw.r, 'Raw respiratory trace does not match');
 
 end
+
+% compare  newly written bids output file from the Phillips ECG V3 test case to 
+% saved files
+
+function test_compare_write2bids_consistency(testCase)
+  pathPhysioPublic = fullfile(fileparts(mfilename('fullpath')), '..', '..', '..');
+  
+  pathExamples = tapas_physio_get_path_examples(pathPhysioPublic);
+
+   % location where the reference files are stored - step norm
+   pathReferenceFiles = fullfile(pathExamples, 'TestReferenceResults', 'examples','write2bids', 'norm');
+
+   % location of the physio example file that will be passed to create_main_regrssors
+   % pathExampleData = fullfile(pathExamples, 'write2bids', 'norm');
+   
+   pathExampleData = fullfile(pathExamples, 'Philips', 'ECG3T_V2');
+   load(fullfile(pathExampleData,'physio_out', 'physio.mat'), 'physio'); % this physio structure contains data from step 2
+    
+    % does that work?
+    cd(fullfile(pathExampleData))
+    physio = tapas_physio_main_create_regressors(physio);
+
+    % read json file from example data
+
+    % go on here
+    fileName = './physio_out/sub-01_task_desc_physio_norm.json'; % filename in JSON extension 
+    str = fileread(fileName); % dedicated for reading files as text 
+    ExampleJson = jsondecode(str);
+
+    % read json file from reference folder
+    cd(fullfile(pathReferenceFiles))
+
+    fileName = 'sub-01_task_desc_physio_norm.json'; % filename in JSON extension 
+    str = fileread(fileName); % dedicated for reading files as text 
+    ReferenceJson = jsondecode(str);
+    
+    verifyEqual(testCase, ExampleJson, ReferenceJson, 'json files do not match');
+
+end 
